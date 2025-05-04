@@ -1,38 +1,101 @@
-.App {
-  text-align: center;
-}
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-container.light {
+  background: linear-gradient(to bottom right, #e3f2fd, #ffffff);
+  color: #000000;
+}
+
+.app-container.dark {
+  background: linear-gradient(to bottom right, #1e1e1e, #121212);
+  color: #f1f1f1;
+}
+
+.forecast-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 20px;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  width: 100%;
+  max-width: 800px;
 }
 
-.App-link {
-  color: #61dafb;
+
+.forecast-card {
+  --card-bg: #ffffff;
+  --card-border: #ccc;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  width: 150px;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.forecast-card.light {
+  --card-bg: #ffffff;
+  --card-border: #ccc;
+}
+.forecast-card.dark {
+  --card-bg: #2c2c2c;
+  --card-border: #444;
+}
+.forecast-card:hover {
+  transform: translateY(-5px);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+input,
+button {
+  padding: 10px 14px;
+  margin: 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+input {
+  width: 200px;
+}
+button {
+  background-color: #007bff;
+  color: #ffffff;
+  font-weight: 600;
+}
+button:hover {
+  background-color: #0056b3;
+  cursor: pointer;
+}
+.dark button {
+  background-color: #444;
+  color: #f1f1f1;
+}
+.dark button:hover {
+  background-color: #666;
+}
+input::placeholder {
+  color: #888;
+}
+.dark input::placeholder {
+  color: #ccc;
+}
+
+@media (max-width: 600px) {
+  .forecast-container {
+    flex-direction: column;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+  .forecast-card {
+    width: 80%;
+    max-width: 300px;
   }
 }
