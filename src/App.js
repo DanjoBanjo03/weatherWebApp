@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import React, { useState, useEffect } from 'react';
 
@@ -60,16 +59,51 @@ function App() {
         setError('Permission denied or unavailable');
       }
     );
+    fetchForecast(city);
   };
 
+  // Function to fetch forecast data by city name
+  const fetchForecast = async (cityName) => {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=metric`
+    );
+    const data = await response.json();
+    const dailyData = {};
+    
+    data.list.forEach((item) => {
+      const date = item.dt_txt.split(" ")[0];
+
+      if (!dailyData[date]) {
+        dailyData[date] = [];
+      }
+      
+      dailyData[date].push(item);
+    });
+
+    const forecastArray = Object.entries(dailyData).map(([date, values]) => {
+      const temps = values.map((v) => v.main.temp);
+      const min = Math.min(...temps);
+      const max = Math.max(...temps);
+      const icon = values[0].weather[0].icon;
+      const description = values[0].weather[0].description;
+
+      return { date, min, max, icon, description };
+    });
+    console.log(forecastArray);
+  };
+
+
   // load toronto weather on page load
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchWeatherByCity(city);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Handle Manual Search
   const handleSearch = () => {
     fetchWeatherByCity(city);
+    fetchForecast(city);
   };
 
   return (
