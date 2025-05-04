@@ -12,14 +12,36 @@ function App() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState(() => {
     const saved = localStorage.getItem('weatherSearchHistory');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      const arr = JSON.parse(saved);
+      // Remove duplicates (case-insensitive), preserving first occurrence
+      const unique = arr.filter((v, i, a) =>
+        a.findIndex(x => x.toLowerCase() === v.toLowerCase()) === i
+      );
+      return unique;
+    } catch {
+      return [];
+    }
   });
+  const [locationInfo, setLocationInfo] = useState({ state: '', country: '' });
 
   // Fetch current weather by city name
   const fetchWeatherByCity = async (cityName) => {
     setLoading(true);
     setError(null);
     try {
+      // Geocode city to get state and country
+      const geoRes = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=5e7cdc95d41a19e79db2f60967553c44`
+      );
+      const geoData = await geoRes.json();
+      if (geoData.length > 0) {
+        const { country, state } = geoData[0];
+        setLocationInfo({ country, state: state || '' });
+      } else {
+        setLocationInfo({ country: '', state: '' });
+      }
       const res = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
       );
@@ -29,9 +51,11 @@ function App() {
       }
       const data = await res.json();
       setWeather(data);
+      return true;
     } catch (err) {
       setError(err.message);
       setWeather(null);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -107,13 +131,14 @@ function App() {
       setError('Please enter a city name.');
       return;
     }
-    await fetchWeatherByCity(cityName);
+    const valid = await fetchWeatherByCity(cityName);
+    if (!valid) return;
     await fetchForecast(cityName);
     const newHistory = [cityName, ...history.filter(h => h.toLowerCase() !== cityName.toLowerCase())]
       .slice(0, 5);
     setHistory(newHistory);
     localStorage.setItem('weatherSearchHistory', JSON.stringify(newHistory));
-    setCity(cityName);
+    setCity('');
   };
 
   // Use browser geolocation on initial load
@@ -153,24 +178,33 @@ function App() {
       <h1>Weather Dashboard</h1>
 
       {/* Search */}
-      <div className="search-bar">
+      <form
+        className="search-bar"
+        onSubmit={e => {
+          e.preventDefault();
+          handleSearch();
+        }}
+      >
         <input
           value={city}
           onChange={e => setCity(e.target.value)}
           placeholder="Enter city name"
         />
-        <button onClick={() => handleSearch()}>Search</button>
-        <button onClick={() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
-              () => setError('Permission denied')
-            );
-          }
-        }}>
+        <button type="submit">Search</button>
+        <button
+          type="button"
+          onClick={() => {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+                () => setError('Permission denied')
+              );
+            }
+          }}
+        >
           Use My Location
         </button>
-      </div>
+      </form>
 
       {/* Recent Searches */}
       {history.length > 0 && (
@@ -193,7 +227,11 @@ function App() {
       {/* Current Weather */}
       {weather && !loading && !error && (
         <div className="current-weather">
-          <h2>{weather.name}</h2>
+          <h2>
+            {weather.name}
+            {locationInfo.state && `, ${locationInfo.state}`}
+            {locationInfo.country && `, ${locationInfo.country}`}
+          </h2>
           <p>Temperature: {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}</p>
           <p>Feels Like: {Math.round(weather.main.feels_like)}°{unit === 'metric' ? 'C' : 'F'}</p>
           <p>{weather.weather[0].description}</p>
@@ -203,7 +241,7 @@ function App() {
       {/* Forecast */}
       {forecast.length > 0 && (
         <div className="forecast-container">
-          {forecast.slice(0, 7).map(day => (
+          {forecast.slice(0, 5).map(day => (
             <div key={day.date} className={`forecast-card ${darkMode ? 'dark' : 'light'}`}>
               <h4>{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}</h4>
               <img
