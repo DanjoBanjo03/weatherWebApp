@@ -97,6 +97,38 @@ input::placeholder {
     width: 80%;
     max-width: 300px;
   }
+
+  /* Stack controls vertically */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* Stack search bar inputs and buttons */
+  .search-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .search-bar input,
+  .search-bar button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Adjust font sizes for readability */
+  .app-container {
+    font-size: 14px;
+  }
+  .current-weather h2 {
+    font-size: 1.5rem;
+  }
+  .forecast-card h4 {
+    font-size: 1rem;
+  }
 }
 
 /* Autocomplete suggestions dropdown */
