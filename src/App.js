@@ -8,6 +8,8 @@ function App() {
   const [loading, setLoading] = useState(false); //store loading state
   const [error, setError] = useState(null); //store error state
   const [forecast, setForecast] = useState([]); //store forecast data
+  const [unit, setUnit] = useState('metric'); //store unit of measurement
+  const [darkMode, setDarkMode] = useState(false);
 
   // Function to fetch weather data by city name
   const fetchWeatherByCity = async (cityName) => {
@@ -15,7 +17,7 @@ function App() {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
       );
       if (!response.ok) throw new Error('City not found');
       const data = await response.json();
@@ -32,7 +34,7 @@ function App() {
     setError(null);
     try {
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=5e7cdc95d41a19e79db2f60967553c44&units=metric`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
       );
       if (!response.ok) throw new Error ('Location error');
       const data = await response.json();
@@ -67,7 +69,7 @@ function App() {
   // Function to fetch forecast data by city name
   const fetchForecast = async (cityName) => {
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=metric`
+      `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
     );
     const data = await response.json();
     const dailyData = {};
@@ -117,6 +119,16 @@ function App() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchWeatherByCity(city);
+      fetchForecast(city);
+    }, 300); // Debounce by 300ms
+
+    return () => clearTimeout(timeout); // Cancel previous timeout if unit changes quickly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit]);
   
   // Handle Manual Search
   const handleSearch = () => {
@@ -125,7 +137,29 @@ function App() {
   };
 
   return (
-    <div style = {{ padding: '20px'}}>
+    <div
+      style={{
+        padding: '20px',
+        backgroundColor: darkMode ? '#121212' : '#fff',
+        color: darkMode ? '#f1f1f1' : '#000',
+        minHeight: '100vh',
+      }}
+    >
+    <button
+      onClick={() => {
+        const newUnit = unit === 'metric' ? 'imperial' : 'metric';
+        setUnit(newUnit);
+      }}
+      style={{ marginLeft: '10px' }}
+    >
+      Switch to {unit === 'metric' ? '°F' : '°C'}
+    </button>
+    <button
+      onClick={() => setDarkMode((prev) => !prev)}
+      style={{ marginLeft: '10px' }}
+    >
+      {darkMode ? 'Light Mode' : 'Dark Mode'}
+    </button>
     <h1>Weather App</h1>
 
     {/* City Input */}
@@ -150,8 +184,8 @@ function App() {
     {weather && !loading && !error && (
       <div>
         <h2>{weather.name}</h2>
-        <p>Temperature: {Math.round(weather.main.temp)}°C</p>
-        <p>Feels Like: {Math.round(weather.main.feels_like)}°C</p>
+        <p>Temperature: {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}</p>
+        <p>Feels Like: {Math.round(weather.main.feels_like)}°{unit === 'metric' ? 'C' : 'F'}</p>
         <p>Description: {weather.weather[0].description}</p>
       </div>
     )}
@@ -175,7 +209,7 @@ function App() {
               padding: '10px',
               width: '150px',
               textAlign: 'center',
-              backgroundColor: '#f9f9f9',
+              backgroundColor: darkMode ? '#1e1e1e' : '#f9f9f9',
             }}
           >
             <h4>
@@ -188,8 +222,8 @@ function App() {
               alt={day.description}
             />
             <p>{day.description}</p>
-            <p>Min: {Math.round(day.min)}°C</p>
-            <p>Max: {Math.round(day.max)}°C</p>
+            <p>Min: {Math.round(day.min)}°{unit === 'metric' ? 'C' : 'F'}</p>
+            <p>Max: {Math.round(day.max)}°{unit === 'metric' ? 'C' : 'F'}</p>
           </div>
         ))}
       </div>
