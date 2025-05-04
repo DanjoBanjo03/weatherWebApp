@@ -1,4 +1,3 @@
-
 .app-container {
   display: flex;
   flex-direction: column;
@@ -98,4 +97,17 @@ input::placeholder {
     width: 80%;
     max-width: 300px;
   }
+}
+
+/* Autocomplete suggestions dropdown */
+.suggestions-list {
+  list-style: none;
+  margin: 4px 0 0 0;
+  padding: 0;
+}
+
+.suggestions-list li {
+  text-decoration: underline;
+  padding: 8px 0;
+  cursor: pointer;
 }

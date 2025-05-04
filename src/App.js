@@ -25,6 +25,26 @@ function App() {
     }
   });
   const [locationInfo, setLocationInfo] = useState({ state: '', country: '' });
+  const [suggestions, setSuggestions] = useState([]);
+  const fetchSuggestions = async (query) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=5e7cdc95d41a19e79db2f60967553c44`
+      );
+      if (!res.ok) {
+        setSuggestions([]);
+        return;
+      }
+      const data = await res.json();
+      setSuggestions(data);
+    } catch {
+      setSuggestions([]);
+    }
+  };
 
   // Fetch current weather by city name
   const fetchWeatherByCity = async (cityName) => {
@@ -187,7 +207,10 @@ function App() {
       >
         <input
           value={city}
-          onChange={e => setCity(e.target.value)}
+          onChange={e => {
+            setCity(e.target.value);
+            fetchSuggestions(e.target.value);
+          }}
           placeholder="Enter city name"
         />
         <button type="submit">Search</button>
@@ -204,6 +227,22 @@ function App() {
         >
           Use My Location
         </button>
+        {suggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {suggestions.map((s, i) => (
+              <li
+                key={i}
+                onClick={() => {
+                  const selection = `${s.name}${s.state ? `, ${s.state}` : ''}, ${s.country}`;
+                  setCity(selection);
+                  setSuggestions([]);
+                }}
+              >
+                {s.name}{s.state ? `, ${s.state}` : ''}, {s.country}
+              </li>
+            ))}
+          </ul>
+        )}
       </form>
 
       {/* Recent Searches */}
