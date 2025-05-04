@@ -2,10 +2,12 @@ import './App.css';
 import React, { useState, useEffect } from 'react';
 
 function App() {
+  // State variables
   const [city, setCity] = useState('Toronto'); //store city name
   const [weather, setWeather] = useState(null); //store weather data
   const [loading, setLoading] = useState(false); //store loading state
   const [error, setError] = useState(null); //store error state
+  const [forecast, setForecast] = useState([]); //store forecast data
 
   // Function to fetch weather data by city name
   const fetchWeatherByCity = async (cityName) => {
@@ -89,15 +91,31 @@ function App() {
 
       return { date, min, max, icon, description };
     });
-    console.log(forecastArray);
+    setForecast(forecastArray); // Store forecast data in state
   };
 
 
   // load toronto weather on page load
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    fetchWeatherByCity(city);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          fetchWeatherByCoords(lat, lon);
+          fetchForecast(city);
+        },
+        (error) => {
+          fetchWeatherByCity('Toronto');
+          fetchForecast('Toronto');
+        }
+      );
+    } else {
+      fetchWeatherByCity('Toronto');
+      fetchForecast('Toronto');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Handle Manual Search
@@ -132,8 +150,48 @@ function App() {
     {weather && !loading && !error && (
       <div>
         <h2>{weather.name}</h2>
-        <p>Temperature: {weather.main.temp}°C</p>
+        <p>Temperature: {Math.round(weather.main.temp)}°C</p>
+        <p>Feels Like: {Math.round(weather.main.feels_like)}°C</p>
         <p>Description: {weather.weather[0].description}</p>
+      </div>
+    )}
+    
+    {forecast.length > 0 && (
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          marginTop: '20px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}
+      >
+        {forecast.slice(0, 7).map((day) => (
+          <div
+            key={day.date}
+            style={{
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              padding: '10px',
+              width: '150px',
+              textAlign: 'center',
+              backgroundColor: '#f9f9f9',
+            }}
+          >
+            <h4>
+              {new Date(day.date).toLocaleDateString('en-US', {
+                weekday: 'short',
+              })}
+            </h4>
+            <img
+              src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
+              alt={day.description}
+            />
+            <p>{day.description}</p>
+            <p>Min: {Math.round(day.min)}°C</p>
+            <p>Max: {Math.round(day.max)}°C</p>
+          </div>
+        ))}
       </div>
     )}
     </div>
