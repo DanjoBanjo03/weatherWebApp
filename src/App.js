@@ -26,6 +26,8 @@ function App() {
   });
   const [locationInfo, setLocationInfo] = useState({ state: '', country: '' });
   const [suggestions, setSuggestions] = useState([]);
+  const apiKey = process.env.REACT_APP_OWM_KEY;
+  
   const fetchSuggestions = async (query) => {
     if (!query) {
       setSuggestions([]);
@@ -33,14 +35,19 @@ function App() {
     }
     try {
       const res = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=5e7cdc95d41a19e79db2f60967553c44`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`
       );
       if (!res.ok) {
         setSuggestions([]);
         return;
       }
       const data = await res.json();
-      setSuggestions(data);
+      // Canada-first: bring Canadian entries (country === 'CA') to the top
+      const sorted = [
+        ...data.filter(item => item.country === 'CA'),
+        ...data.filter(item => item.country !== 'CA')
+      ];
+      setSuggestions(sorted);
     } catch {
       setSuggestions([]);
     }
@@ -53,7 +60,7 @@ function App() {
     try {
       // Geocode city to get state and country
       const geoRes = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=5e7cdc95d41a19e79db2f60967553c44`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${apiKey}`
       );
       const geoData = await geoRes.json();
       if (geoData.length > 0) {
@@ -63,7 +70,7 @@ function App() {
         setLocationInfo({ country: '', state: '' });
       }
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
+        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=${unit}`
       );
       if (!res.ok) {
         const errData = await res.json();
@@ -87,7 +94,7 @@ function App() {
     setError(null);
     try {
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${unit}`
       );
       if (!res.ok) {
         const errData = await res.json();
@@ -110,7 +117,7 @@ function App() {
     setError(null);
     try {
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=5e7cdc95d41a19e79db2f60967553c44&units=${unit}`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${apiKey}&units=${unit}`
       );
       if (!res.ok) {
         const errData = await res.json();
