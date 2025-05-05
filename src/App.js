@@ -53,6 +53,18 @@ function App() {
     }
   };
 
+  // Debounce suggestion fetch by 300ms
+  useEffect(() => {
+    if (!city) {
+      setSuggestions([]);
+      return;
+    }
+    const handler = setTimeout(() => {
+      fetchSuggestions(city);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [city]);
+
   // Fetch current weather by city name
   const fetchWeatherByCity = async (cityName) => {
     setLoading(true);
@@ -214,10 +226,7 @@ function App() {
       >
         <input
           value={city}
-          onChange={e => {
-            setCity(e.target.value);
-            fetchSuggestions(e.target.value);
-          }}
+          onChange={e => setCity(e.target.value)}
           placeholder="Enter city name"
         />
         <button type="submit">Search</button>
