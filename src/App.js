@@ -1,5 +1,9 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
+import SearchBar from './components/SearchBar';
+import History from './components/History';
+import CurrentWeather from './components/CurrentWeather';
+import ForecastList from './components/ForecastList';
 
 function App() {
   // State variables
@@ -216,100 +220,34 @@ function App() {
 
       <h1>Weather Dashboard</h1>
 
-      {/* Search */}
-      <form
-        className="search-bar"
-        onSubmit={e => {
-          e.preventDefault();
-          handleSearch();
-        }}
-      >
-        <input
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          placeholder="Enter city name"
-        />
-        <button type="submit">Search</button>
-        <button
-          type="button"
-          onClick={() => {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(
-                pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
-                () => setError('Permission denied')
-              );
-            }
-          }}
-        >
-          Use My Location
-        </button>
-        {suggestions.length > 0 && (
-          <ul className="suggestions-list">
-            {suggestions.map((s, i) => (
-              <li
-                key={i}
-                onClick={() => {
-                  const selection = `${s.name}${s.state ? `, ${s.state}` : ''}, ${s.country}`;
-                  setCity(selection);
-                  setSuggestions([]);
-                }}
-              >
-                {s.name}{s.state ? `, ${s.state}` : ''}, {s.country}
-              </li>
-            ))}
-          </ul>
-        )}
-      </form>
+      <SearchBar
+        city={city}
+        setCity={setCity}
+        suggestions={suggestions}
+        setSuggestions={setSuggestions}
+        handleSearch={handleSearch}
+        fetchSuggestions={fetchSuggestions}
+        fetchWeatherByCoords={fetchWeatherByCoords}
+        setError={setError}
+      />
 
-      {/* Recent Searches */}
-      {history.length > 0 && (
-        <div className="history-container">
-          <h3>Recent Searches</h3>
-          <div>
-            {history.map(h => (
-              <button key={h} onClick={() => handleSearch(h)}>
-                {h}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <History historyList={history} handleSearch={handleSearch} />
 
       {/* Status */}
       {loading && <p>Loading...</p>}
       {error && <p className="error">{error}</p>}
 
-      {/* Current Weather */}
-      {weather && !loading && !error && (
-        <div className="current-weather">
-          <h2>
-            {weather.name}
-            {locationInfo.state && `, ${locationInfo.state}`}
-            {locationInfo.country && `, ${locationInfo.country}`}
-          </h2>
-          <p>Temperature: {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}</p>
-          <p>Feels Like: {Math.round(weather.main.feels_like)}°{unit === 'metric' ? 'C' : 'F'}</p>
-          <p>{weather.weather[0].description}</p>
-        </div>
-      )}
+      <CurrentWeather
+        weather={weather}
+        locationInfo={locationInfo}
+        unit={unit}
+      />
 
-      {/* Forecast */}
-      {forecast.length > 0 && (
-        <div className="forecast-container">
-          {forecast.slice(0, 5).map(day => (
-            <div key={day.date} className={`forecast-card ${darkMode ? 'dark' : 'light'}`}>
-              <h4>{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}</h4>
-              <img
-                src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
-                alt={day.description}
-              />
-              <p>{day.description}</p>
-              <p>Min: {Math.round(day.min)}°{unit === 'metric' ? 'C' : 'F'}</p>
-              <p>Max: {Math.round(day.max)}°{unit === 'metric' ? 'C' : 'F'}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <ForecastList
+        forecast={forecast}
+        unit={unit}
+        darkMode={darkMode}
+      />
     </div>
   );
 }
