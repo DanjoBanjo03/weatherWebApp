@@ -200,9 +200,12 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refetch when unit changes
+  // Re-fetch when unit changes, using the last successful weather.city
   useEffect(() => {
-    handleSearch(city);
+    if (weather && weather.name) {
+      fetchWeatherByCity(weather.name);
+      fetchForecast(weather.name);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit]);
 
